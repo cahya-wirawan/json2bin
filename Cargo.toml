@@ -1,0 +1,11 @@
+[package]
+name = "json2bin"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rwkv-tokenizer = "0.8.5"
+serde_json = "1.0.120"
+serde = { version = "1.0.204", features = ["derive"] }
+bytemuck = "1.16.1"
+clap = { version = "4.5.9", features = ["derive"] }
