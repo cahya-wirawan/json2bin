@@ -28,4 +28,9 @@ $ json2bin -i src/sample.jsonl
 The output directory can be set with the argument "--output-dir <OUTPUT_DIR>"
 
 ## Performance comparison
-We compared the performance between this Rust json2bin and the Python json2binidx tool. 
+
+We converted a 213MB simple english wikipedia in jsonl format to binidx format in M2 Apple machine. The Rust json2bin
+is more than 24 times faster than the Python json2binidx:
+The Python json2binidx: 46.87s
+This Rust json2bin: 1.92s
+

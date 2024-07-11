@@ -1,6 +1,6 @@
 [package]
 name = "json2bin"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Cahya Wirawan <cahya.wirawan@gmail.com>"]
 description = "A fast jsonl to RWKV binidx converter in Rust"
