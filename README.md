@@ -2,9 +2,16 @@
 
 A fast Jsonl to binidx files converter written in Rust.
 
-## Usage
+## Installation
+
 ```
-json2bin -h
+$ cargo install json2bin
+```
+
+## Usage
+
+```
+$ json2bin -h
 Json converter to RWKV binidx file format
 Usage: json2bin [OPTIONS] --input <INPUT>
 
@@ -16,7 +23,7 @@ Options:
 ```
 Following command will convert the jsonl file src/sample.jsonl into src/sample.bin and src/sample.idx files.
 ```
-json2bin -i src/sample.jsonl
+$ json2bin -i src/sample.jsonl
 ```
 The output directory can be set with the argument "--output-dir <OUTPUT_DIR>"
 
