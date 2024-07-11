@@ -4,7 +4,7 @@
 [![Crates.io Downloads](https://img.shields.io/crates/d/json2bin.svg)](https://crates.io/crates/json2bin)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache_2.0-blue.svg)](https://github.com/cahya-wirawan/json2bin/blob/main/LICENSE.txt)
 
-A fast Jsonl converter to RWKV binidx files. It is written in Rust for performance reason.
+A fast Jsonl converter to RWKV binidx files written in Rust.
 
 ## Installation
 
