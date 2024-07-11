@@ -4,6 +4,7 @@ use rwkv_tokenizer;
 use serde::Deserialize;
 use bytemuck::cast_slice;
 use clap::Parser;
+use tqdm::tqdm;
 
 const HDR_MAGIC: &str = "MMIDIDX\x00\x00";
 const VERSION: [u8; 8] = [1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
@@ -39,7 +40,6 @@ fn main() {
     } else {
         &*args.output_dir
     };
-    output_dir
     let mut file_bin = output_dir.join(filename);
     file_bin.set_extension("bin");
     let mut file_idx = output_dir.join(filename);
@@ -55,7 +55,7 @@ fn main() {
     let mut doc_indexes: Vec<u64> = vec![0u64];
     let mut file_bin_writer = BufWriter::new(file_bin);
     let mut file_idx_writer = BufWriter::new(file_idx);
-    for line in BufReader::new(file_in).lines() {
+    for line in tqdm(BufReader::new(file_in).lines()) {
         doc_length += 1;
         let line = line.expect("couldn't get line");
         bytes_counter += line.len();

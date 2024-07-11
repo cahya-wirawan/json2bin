@@ -9,3 +9,4 @@ serde_json = "1.0.120"
 serde = { version = "1.0.204", features = ["derive"] }
 bytemuck = "1.16.1"
 clap = { version = "4.5.9", features = ["derive"] }
+tqdm = "0.7.0"
