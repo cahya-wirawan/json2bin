@@ -1,6 +1,6 @@
 # Json2bin
 
-A fast Jsonl to binidx files converter written in Rust.
+A fast Jsonl converter to RWKV binidx files. It is written in Rust for performance reason.
 
 ## Installation
 
