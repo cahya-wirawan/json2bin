@@ -2,6 +2,11 @@
 name = "json2bin"
 version = "0.1.0"
 edition = "2021"
+authors = ["Cahya Wirawan <cahya.wirawan@gmail.com>"]
+description = "A fast jsonl to RWKV binidx converter in Rust"
+license = "Apache-2.0"
+documentation = "https://github.com/cahya-wirawan/json2bin"
+exclude = []
 
 [dependencies]
 rwkv-tokenizer = "0.8.5"
