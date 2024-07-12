@@ -1,3 +1,4 @@
+use std::ffi::c_float;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use rwkv_tokenizer;
@@ -5,8 +6,10 @@ use serde::Deserialize;
 use bytemuck::cast_slice;
 use clap::Parser;
 use tqdm::tqdm;
+use std::time::Duration;
+use std::time::Instant;
 
-const HDR_MAGIC: &str = "MMIDIDX\x00\x00";
+const MAGIC_HDR: &str = "MMIDIDX\x00\x00";
 const VERSION: [u8; 8] = [1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
 const DTYPE: [u8; 1] = [8u8];
 #[derive(Deserialize, Debug)]
@@ -55,6 +58,7 @@ fn main() {
     let mut doc_indexes: Vec<u64> = vec![0u64];
     let mut file_bin_writer = BufWriter::new(file_bin);
     let mut file_idx_writer = BufWriter::new(file_idx);
+    let _elapsed: Duration = Duration::new(0, 0);
     for line in tqdm(BufReader::new(file_in).lines()) {
         doc_length += 1;
         let line = line.expect("couldn't get line");
@@ -73,7 +77,7 @@ fn main() {
     file_bin_writer.flush().unwrap();
 
     doc_pointers.pop();
-    file_idx_writer.write(HDR_MAGIC.as_bytes()).expect("Can't write");
+    file_idx_writer.write(MAGIC_HDR.as_bytes()).expect("Can't write");
     file_idx_writer.write(cast_slice(&VERSION)).expect("Can't write");
     file_idx_writer.write(cast_slice(&DTYPE)).expect("Can't write");
     file_idx_writer.write(cast_slice(&[doc_length])).expect("Can't write");
@@ -82,7 +86,11 @@ fn main() {
     file_idx_writer.write(cast_slice(&doc_pointers)).expect("Can't write");
     file_idx_writer.write(cast_slice(&doc_indexes)).expect("Can't write");
     file_idx_writer.flush().unwrap();
-    println!("Output directory: {:?}", output_dir);
-    println!("Bytes read: {:?}", bytes_counter);
-    println!("Tokens written: {:?}", tokens_counter);
+    let now = Instant::now();
+    println!("- Output directory: {:?}", output_dir);
+    println!("- Bytes read: {:?}", bytes_counter);
+    println!("- Tokens written: {:?}", tokens_counter);
+    println!("- Bytes/tokens: {:?}", bytes_counter as c_float/tokens_counter as c_float);
+    println!("- Elapsed time: {:.2?}", now.elapsed());
+    println!("- Performance: {:.2?}MB/s", bytes_counter as f32/now.elapsed().as_secs_f32()/(1024*1024) as f32);
 }
