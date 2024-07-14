@@ -1,12 +1,12 @@
 use std::ffi::c_float;
+use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use rwkv_tokenizer;
 use serde::Deserialize;
 use bytemuck::cast_slice;
 use clap::Parser;
-use tqdm::tqdm;
-use std::time::Duration;
+use tqdm::pbar;
 use std::time::Instant;
 
 const MAGIC_HDR: &str = "MMIDIDX\x00\x00";
@@ -35,14 +35,17 @@ fn main() {
     let args = Args::parse();
     let tokenizer = rwkv_tokenizer::WorldTokenizer::new(None).unwrap();
 
-    let file_in = File::open(args.input.clone()).expect("couldn't open file");
-    let filename = args.input.file_name().unwrap();
+    //let input = args.input.clone();
+    let file_in = File::open(&args.input).expect("couldn't open file");
+    let filename = &args.input.file_name().unwrap();
     let output_dir;
     output_dir = if args.output_dir.to_str().unwrap() == "-" {
-        args.input.parent().unwrap()
+        &args.input.parent().unwrap()
     } else {
         &*args.output_dir
     };
+    let metadata = fs::metadata(&args.input);
+    let filesize = metadata.unwrap().len();
     let mut file_bin = output_dir.join(filename);
     file_bin.set_extension("bin");
     let mut file_idx = output_dir.join(filename);
@@ -58,11 +61,14 @@ fn main() {
     let mut doc_indexes: Vec<u64> = vec![0u64];
     let mut file_bin_writer = BufWriter::new(file_bin);
     let mut file_idx_writer = BufWriter::new(file_idx);
-    let _elapsed: Duration = Duration::new(0, 0);
-    for line in tqdm(BufReader::new(file_in).lines()) {
+    let mut pbar = pbar(Some(filesize as usize));
+    let start = Instant::now();
+    for line in BufReader::new(file_in).lines() {
         doc_length += 1;
         let line = line.expect("couldn't get line");
-        bytes_counter += line.len();
+        let line_length = line.len();
+        pbar.update(line_length+1).unwrap();
+        bytes_counter += line_length;
         let ds: Jsonline = serde_json::from_str(&line).unwrap();
         let mut token_ids = tokenizer.encode(ds.text.as_str());
         token_ids.push(0);
@@ -75,6 +81,7 @@ fn main() {
         doc_indexes.push(doc_indexes[doc_indexes.len()-1] + 1);
     }
     file_bin_writer.flush().unwrap();
+    let elapsed = start.elapsed();
 
     doc_pointers.pop();
     file_idx_writer.write(MAGIC_HDR.as_bytes()).expect("Can't write");
@@ -86,11 +93,14 @@ fn main() {
     file_idx_writer.write(cast_slice(&doc_pointers)).expect("Can't write");
     file_idx_writer.write(cast_slice(&doc_indexes)).expect("Can't write");
     file_idx_writer.flush().unwrap();
-    let now = Instant::now();
-    println!("- Output directory: {:?}", output_dir);
+    let mut filename_bin = filename.to_str().unwrap().replace(".jsonl", "").to_owned();
+    filename_bin.push_str(".bin");
+    let mut filename_idx = filename.to_str().unwrap().replace(".jsonl", "").to_owned();
+    filename_idx.push_str(".idx");
+    println!("- Output files:  {}/{{{filename_bin},{filename_idx}}}", output_dir.to_str().unwrap());
     println!("- Bytes read: {:?}", bytes_counter);
     println!("- Tokens written: {:?}", tokens_counter);
     println!("- Bytes/tokens: {:?}", bytes_counter as c_float/tokens_counter as c_float);
-    println!("- Elapsed time: {:.2?}", now.elapsed());
-    println!("- Performance: {:.2?}MB/s", bytes_counter as f32/now.elapsed().as_secs_f32()/(1024*1024) as f32);
+    println!("- Elapsed time: {:.2?}", elapsed);
+    println!("- Performance: {:.2?}MB/s", bytes_counter as f32/elapsed.as_secs_f32()/(1024*1024) as f32);
 }
