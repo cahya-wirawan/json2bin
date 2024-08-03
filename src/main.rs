@@ -8,10 +8,12 @@ use bytemuck::cast_slice;
 use clap::Parser;
 use tqdm::pbar;
 use std::time::Instant;
+use std::cmp;
 
 const MAGIC_HDR: &str = "MMIDIDX\x00\x00";
 const VERSION: [u8; 8] = [1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
 const DTYPE: [u8; 1] = [8u8];
+const VEC_STEP: usize = 1024*1024;
 #[derive(Deserialize, Debug)]
 struct Jsonline {
     text: String
@@ -89,9 +91,15 @@ fn main() {
     file_idx_writer.write(cast_slice(&DTYPE)).expect("Can't write");
     file_idx_writer.write(cast_slice(&[doc_length])).expect("Can't write");
     file_idx_writer.write(cast_slice(&[doc_length+1])).expect("Can't write");
-    file_idx_writer.write(cast_slice(&doc_sizes)).expect("Can't write");
-    file_idx_writer.write(cast_slice(&doc_pointers)).expect("Can't write");
-    file_idx_writer.write(cast_slice(&doc_indexes)).expect("Can't write");
+    for i in (0..doc_sizes.len()).step_by(VEC_STEP) {
+        file_idx_writer.write(cast_slice(&doc_sizes[i..cmp::min(i+VEC_STEP, doc_sizes.len())])).expect("Can't write");
+    }
+    for i in (0..doc_pointers.len()).step_by(VEC_STEP) {
+        file_idx_writer.write(cast_slice(&doc_pointers[i..cmp::min(i+VEC_STEP, doc_pointers.len())])).expect("Can't write");
+    }
+    for i in (0..doc_indexes.len()).step_by(VEC_STEP) {
+        file_idx_writer.write(cast_slice(&doc_indexes[i..cmp::min(i+VEC_STEP, doc_indexes.len())])).expect("Can't write");
+    }
     file_idx_writer.flush().unwrap();
     let mut filename_bin = filename.to_str().unwrap().replace(".jsonl", "").to_owned();
     filename_bin.push_str(".bin");
