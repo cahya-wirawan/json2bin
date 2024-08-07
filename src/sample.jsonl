@@ -8,3 +8,43 @@
 {"text": "8:Indonesia, dengan nama resmi Republik Indonesia,[a] adalah sebuah negara kepulauan di Asia Tenggara"}
 {"text": "9:印度尼西亞共和国（印尼語：Republik Indonesia，IPA讀音：[rɛpʊblɪk ɪndɔnɛsɪa]），通稱印度尼西亞，簡稱印尼[c]，是位于东南亚的群岛国家；由17,506個[d]岛屿组成[10]"}
 {"text": "10:إنْدُوْنِيْسْيَا، ورسميّاً جُمْهُوْرِيّةُ إنْدُوْنِيْسْيَا (بالإندونيسية: Republik Indonesia) هي دولة أرخبيلية تقع في جنوب شرق آسيا البحري، وتعني باليونانية «الجزر الهندية». تضم إندونيسيا 17508 جزيرة. ويبلغ عدد سكانها حوالي 275 مليون شخص، وهو ما يجعلها رابع أكبر دولة من حيث عدد السكان، كما أنها أكبر بلد ذو غالبية سكانية مسلمة، وثالث أكبر ديمقراطية في العالم، وأكبر بلد أسترونيزي في العالم. وتعد جاوة التي يعيش عليها أكثر من نصف سكان البلاد أكبر جزيرة مأهولة بالسكان في العالم"}
+{"text": "11:This is the first document."}
+{"text": "12:Hello\nWorld"}
+{"text": "13:1+1=2\n1+2=3\n2+2=4"}
+{"text": "14:You will be training the GPT version because it's paralleziable and faster to train."}
+{"text": "15:Read the inference code in src/model.py and try using the final hidden state(.xx .aa .bb)"}
+{"text": "16:You can fine-tune the model with longer ctxLen and it can quickly adapt to longer ctxLens."}
+{"text": "17:Consider RWKV 14B. The state has 200 vectors, that is, 5 vectors for each block: fp16 (xx), fp32 (aa), fp32 (bb), fp32 (pp), fp16 (xx)."}
+{"text": "18:Indonesia, dengan nama resmi Republik Indonesia,[a] adalah sebuah negara kepulauan di Asia Tenggara"}
+{"text": "19:印度尼西亞共和国（印尼語：Republik Indonesia，IPA讀音：[rɛpʊblɪk ɪndɔnɛsɪa]），通稱印度尼西亞，簡稱印尼[c]，是位于东南亚的群岛国家；由17,506個[d]岛屿组成[10]"}
+{"text": "20:إنْدُوْنِيْسْيَا، ورسميّاً جُمْهُوْرِيّةُ إنْدُوْنِيْسْيَا (بالإندونيسية: Republik Indonesia) هي دولة أرخبيلية تقع في جنوب شرق آسيا البحري، وتعني باليونانية «الجزر الهندية». تضم إندونيسيا 17508 جزيرة. ويبلغ عدد سكانها حوالي 275 مليون شخص، وهو ما يجعلها رابع أكبر دولة من حيث عدد السكان، كما أنها أكبر بلد ذو غالبية سكانية مسلمة، وثالث أكبر ديمقراطية في العالم، وأكبر بلد أسترونيزي في العالم. وتعد جاوة التي يعيش عليها أكثر من نصف سكان البلاد أكبر جزيرة مأهولة بالسكان في العالم"}
+{"text": "21:This is the first document."}
+{"text": "22:Hello\nWorld"}
+{"text": "23:1+1=2\n1+2=3\n2+2=4"}
+{"text": "24:You will be training the GPT version because it's paralleziable and faster to train."}
+{"text": "25:Read the inference code in src/model.py and try using the final hidden state(.xx .aa .bb)"}
+{"text": "26:You can fine-tune the model with longer ctxLen and it can quickly adapt to longer ctxLens."}
+{"text": "27:Consider RWKV 14B. The state has 200 vectors, that is, 5 vectors for each block: fp16 (xx), fp32 (aa), fp32 (bb), fp32 (pp), fp16 (xx)."}
+{"text": "28:Indonesia, dengan nama resmi Republik Indonesia,[a] adalah sebuah negara kepulauan di Asia Tenggara"}
+{"text": "29:印度尼西亞共和国（印尼語：Republik Indonesia，IPA讀音：[rɛpʊblɪk ɪndɔnɛsɪa]），通稱印度尼西亞，簡稱印尼[c]，是位于东南亚的群岛国家；由17,506個[d]岛屿组成[10]"}
+{"text": "30:إنْدُوْنِيْسْيَا، ورسميّاً جُمْهُوْرِيّةُ إنْدُوْنِيْسْيَا (بالإندونيسية: Republik Indonesia) هي دولة أرخبيلية تقع في جنوب شرق آسيا البحري، وتعني باليونانية «الجزر الهندية». تضم إندونيسيا 17508 جزيرة. ويبلغ عدد سكانها حوالي 275 مليون شخص، وهو ما يجعلها رابع أكبر دولة من حيث عدد السكان، كما أنها أكبر بلد ذو غالبية سكانية مسلمة، وثالث أكبر ديمقراطية في العالم، وأكبر بلد أسترونيزي في العالم. وتعد جاوة التي يعيش عليها أكثر من نصف سكان البلاد أكبر جزيرة مأهولة بالسكان في العالم"}
+{"text": "31:This is the first document."}
+{"text": "32:Hello\nWorld"}
+{"text": "33:1+1=2\n1+2=3\n2+2=4"}
+{"text": "34:You will be training the GPT version because it's paralleziable and faster to train."}
+{"text": "35:Read the inference code in src/model.py and try using the final hidden state(.xx .aa .bb)"}
+{"text": "36:You can fine-tune the model with longer ctxLen and it can quickly adapt to longer ctxLens."}
+{"text": "37:Consider RWKV 14B. The state has 200 vectors, that is, 5 vectors for each block: fp16 (xx), fp32 (aa), fp32 (bb), fp32 (pp), fp16 (xx)."}
+{"text": "38:Indonesia, dengan nama resmi Republik Indonesia,[a] adalah sebuah negara kepulauan di Asia Tenggara"}
+{"text": "39:印度尼西亞共和国（印尼語：Republik Indonesia，IPA讀音：[rɛpʊblɪk ɪndɔnɛsɪa]），通稱印度尼西亞，簡稱印尼[c]，是位于东南亚的群岛国家；由17,506個[d]岛屿组成[10]"}
+{"text": "40:إنْدُوْنِيْسْيَا، ورسميّاً جُمْهُوْرِيّةُ إنْدُوْنِيْسْيَا (بالإندونيسية: Republik Indonesia) هي دولة أرخبيلية تقع في جنوب شرق آسيا البحري، وتعني باليونانية «الجزر الهندية». تضم إندونيسيا 17508 جزيرة. ويبلغ عدد سكانها حوالي 275 مليون شخص، وهو ما يجعلها رابع أكبر دولة من حيث عدد السكان، كما أنها أكبر بلد ذو غالبية سكانية مسلمة، وثالث أكبر ديمقراطية في العالم، وأكبر بلد أسترونيزي في العالم. وتعد جاوة التي يعيش عليها أكثر من نصف سكان البلاد أكبر جزيرة مأهولة بالسكان في العالم"}
+{"text": "41:This is the first document."}
+{"text": "42:Hello\nWorld"}
+{"text": "43:1+1=2\n1+2=3\n2+2=4"}
+{"text": "44:You will be training the GPT version because it's paralleziable and faster to train."}
+{"text": "45:Read the inference code in src/model.py and try using the final hidden state(.xx .aa .bb)"}
+{"text": "46:You can fine-tune the model with longer ctxLen and it can quickly adapt to longer ctxLens."}
+{"text": "47:Consider RWKV 14B. The state has 200 vectors, that is, 5 vectors for each block: fp16 (xx), fp32 (aa), fp32 (bb), fp32 (pp), fp16 (xx)."}
+{"text": "48:Indonesia, dengan nama resmi Republik Indonesia,[a] adalah sebuah negara kepulauan di Asia Tenggara"}
+{"text": "49:印度尼西亞共和国（印尼語：Republik Indonesia，IPA讀音：[rɛpʊblɪk ɪndɔnɛsɪa]），通稱印度尼西亞，簡稱印尼[c]，是位于东南亚的群岛国家；由17,506個[d]岛屿组成[10]"}
+{"text": "50:إنْدُوْنِيْسْيَا، ورسميّاً جُمْهُوْرِيّةُ إنْدُوْنِيْسْيَا (بالإندونيسية: Republik Indonesia) هي دولة أرخبيلية تقع في جنوب شرق آسيا البحري، وتعني باليونانية «الجزر الهندية». تضم إندونيسيا 17508 جزيرة. ويبلغ عدد سكانها حوالي 275 مليون شخص، وهو ما يجعلها رابع أكبر دولة من حيث عدد السكان، كما أنها أكبر بلد ذو غالبية سكانية مسلمة، وثالث أكبر ديمقراطية في العالم، وأكبر بلد أسترونيزي في العالم. وتعد جاوة التي يعيش عليها أكثر من نصف سكان البلاد أكبر جزيرة مأهولة بالسكان في العالم"}
