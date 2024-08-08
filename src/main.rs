@@ -12,6 +12,7 @@ use tqdm::pbar;
 use serde::Deserialize;
 use bytemuck::cast_slice;
 use std::io::prelude::*;
+use std::io::SeekFrom::Current;
 use rwkv_tokenizer;
 
 const MAX_THREADS: u16 = 5;
@@ -64,30 +65,41 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
     let file_size = file_in.metadata().unwrap().len();
     let start_position = file_size/max_threads as u64 *thread_index as u64;
     let current_position = file_in.seek(SeekFrom::Start(start_position)).unwrap();
-    // println!("start_position: {start_position}, current_position: {current_position}");
+    println!("start_position {thread_index}: {start_position}, current_position: {current_position}");
     assert_eq!(start_position, current_position);
     let mut line_counter = 0;
     let mut bytes_counter = 0;
     let mut tokens_counter = 0;
     let mut file_size_per_thread = file_size/max_threads as u64;
-    let mut pbar = pbar(Some(file_size_per_thread as usize));
-    for line in BufReader::new(file_in).lines() {
-        let line = line.expect("couldn't get line");
+    //let mut pbar = pbar(Some(file_size_per_thread as usize));
+    let mut buf_reader = BufReader::new(file_in);
+    let mut line = String::new();
+    let mut current_position: usize = start_position as usize;
+    while let Ok(n) = buf_reader.read_line(&mut line) {
+        if n == 0 { break; } // eof
         let line_length = line.len();
-        if file_size_per_thread > (line_length+1) as u64 {
-            pbar.update(line_length+1).unwrap();
-            file_size_per_thread -= (line_length+1) as u64;
+        current_position += line_length;
+        println!("# line_length {thread_index}: {line_length}:{current_position}");
+        //let line = line.expect("couldn't get line");
+        //let line_length = line.len();
+        if file_size_per_thread > line_length as u64 {
+            //pbar.update(line_length).unwrap();
+            file_size_per_thread -= line_length as u64;
         } else {
-            pbar.update(file_size_per_thread as usize).unwrap();
+            //pbar.update(file_size_per_thread as usize).unwrap();
             file_size_per_thread = 0;
         }
         bytes_counter += line_length;
         line_counter += 1;
+        println!("current_position {}:{}:{}", thread_index, line_counter, bytes_counter+start_position as usize);
         if line_counter == 1 && thread_index != 0 {
-            // println!("jsonl {thread_index}:: {:?}", line);
+            println!("jsonl {thread_index} Start 1: {:?}", line);
+            line.clear();
             continue;
         }
-
+        if line_counter == 2 {
+            println!("jsonl {thread_index} Start 2: {:?}", line);
+        }
         doc_length += 1;
         let ds: Jsonline = serde_json::from_str(&line).unwrap();
         // println!("jsonl {thread_index}: {:?}", ds);
@@ -97,10 +109,12 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
         let token_bytes: &[u8] = cast_slice(&token_ids);
         file_bin_writer.write(token_bytes).expect("Can't write");
         doc_sizes.push(token_ids.len() as u32);
-        if bytes_counter as u64> file_size/max_threads as u64 {
-            // println!("jsonl {thread_index}: End {bytes_read}:{:?}", file_size/MAX_THREADS as u64);
+        if bytes_counter as u64 >= file_size/max_threads as u64 {
+            println!("jsonl {thread_index}: End {bytes_counter}:{:?}", file_size/max_threads as u64);
+            println!("jsonl {thread_index}: End {line}");
             break;
         }
+        line.clear();
     }
     file_bin_writer.flush().unwrap();
     let metadata = Metadata {
@@ -154,8 +168,8 @@ fn main() {
         }
     });
     for (index, metadata) in rx.iter().enumerate() {
-        println!("{index} Got: {:?} - {:?} - {:?}", metadata.index, metadata.name, metadata.doc_length);
-        println!("doc_sizes: {:?}", metadata.doc_sizes);
+        //println!("{index} Got: {:?} - {:?} - {:?}", metadata.index, metadata.name, metadata.doc_length);
+        //println!("doc_sizes: {:?}", metadata.doc_sizes);
         results.insert(metadata.index, metadata);
         if index as u16 >= (MAX_THREADS - 1) {
             break;
