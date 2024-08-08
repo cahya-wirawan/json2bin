@@ -14,7 +14,7 @@ use bytemuck::cast_slice;
 use std::io::prelude::*;
 use rwkv_tokenizer;
 
-const MAX_THREADS: u16 = 5;
+// const DEFAULT_THREADS_NUMBER: u16 = 8;
 const MAGIC_HDR: &str = "MMIDIDX\x00\x00";
 const VERSION: [u8; 8] = [1u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
 const DTYPE: [u8; 1] = [8u8];
@@ -34,6 +34,10 @@ struct Args {
     /// Output directory for binidx files
     #[arg(short, long, required = false, default_value = "-")]
     output_dir: std::path::PathBuf,
+
+    /// Number of threads
+    #[arg(short, long, required = false, default_value = "5")]
+    thread: u16,
 }
 
 #[derive(Debug)]
@@ -125,26 +129,29 @@ fn main() {
     } else {
         &*args.output_dir
     };
+    let threads_number = args.thread;
+
     let start = Instant::now();
     thread::scope(|scope| {
-        for thread_index in 0..MAX_THREADS {
+        for thread_index in 0..threads_number {
             let tx_ = tx.clone();
             scope.spawn(move || {
-                json2bin(thread_index, MAX_THREADS, tx_, filename);
+                json2bin(thread_index, threads_number, tx_, filename);
             });
         }
     });
     for (index, metadata) in rx.iter().enumerate() {
         results.insert(metadata.index, metadata);
-        if index as u16 >= (MAX_THREADS - 1) {
+        if index as u16 >= (threads_number - 1) {
             break;
         }
     }
+    println!("resultss: {:?}", results);
     println!("Merging binidx data.");
     let mut document_length_all = 0;
     let mut bytes_counter_all= 0;
     let mut tokens_counter_all= 0;
-    for index in 0..MAX_THREADS {
+    for index in 0..threads_number {
         // println!("result {index}: {:?}", results[&index]);
         document_length_all += results[&index].doc_length;
         bytes_counter_all += results[&index].bytes_counter;
@@ -160,7 +167,7 @@ fn main() {
     buf_idx_writer.write(cast_slice(&[document_length_all])).expect("Can't write");
     buf_idx_writer.write(cast_slice(&[document_length_all+1])).expect("Can't write");
 
-    for index in 0..MAX_THREADS {
+    for index in 0..threads_number {
         for i in (0..results[&index].doc_sizes.len()).step_by(VEC_STEP) {
             buf_idx_writer.write(cast_slice(&results[&index].doc_sizes[i..cmp::min(i+VEC_STEP, results[&index].doc_sizes.len())])).expect("Can't write");
         }
@@ -168,9 +175,9 @@ fn main() {
     buf_idx_writer.flush().unwrap();
     buf_idx_writer.write(cast_slice(&[0u64])).expect("Can't write");
     let mut last_pointer: u64 = 0;
-    for index in 0..MAX_THREADS {
+    for index in 0..threads_number {
         for i in 0..results[&index].doc_sizes.len() {
-            if (index == MAX_THREADS - 1) && (i == results[&index].doc_sizes.len() - 1) {
+            if (index == threads_number - 1) && (i == results[&index].doc_sizes.len() - 1) {
                 break;
             }
             let pointer = last_pointer + 2 * results[&index].doc_sizes[i] as u64;
@@ -188,7 +195,7 @@ fn main() {
         .open(file_bin.clone()).expect("couldn't open file");
     let mut buf_bin_writer: BufWriter<File>;
     buf_bin_writer = BufWriter::new(file_bin_out);
-    for index in 0..MAX_THREADS {
+    for index in 0..threads_number {
         if index == 0 {
             continue;
         } else {
