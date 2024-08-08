@@ -12,7 +12,6 @@ use tqdm::pbar;
 use serde::Deserialize;
 use bytemuck::cast_slice;
 use std::io::prelude::*;
-use std::io::SeekFrom::Current;
 use rwkv_tokenizer;
 
 const MAX_THREADS: u16 = 5;
@@ -39,7 +38,6 @@ struct Args {
 
 #[derive(Debug)]
 struct Metadata {
-    name: String,
     index: u16,
     doc_length: u64,
     doc_sizes: Vec<u32>,
@@ -65,44 +63,32 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
     let file_size = file_in.metadata().unwrap().len();
     let start_position = file_size/max_threads as u64 *thread_index as u64;
     let current_position = file_in.seek(SeekFrom::Start(start_position)).unwrap();
-    println!("start_position {thread_index}: {start_position}, current_position: {current_position}");
     assert_eq!(start_position, current_position);
     let mut line_counter = 0;
     let mut bytes_counter = 0;
     let mut tokens_counter = 0;
     let mut file_size_per_thread = file_size/max_threads as u64;
-    //let mut pbar = pbar(Some(file_size_per_thread as usize));
+    let mut pbar = pbar(Some(file_size_per_thread as usize));
     let mut buf_reader = BufReader::new(file_in);
     let mut line = String::new();
-    let mut current_position: usize = start_position as usize;
     while let Ok(n) = buf_reader.read_line(&mut line) {
         if n == 0 { break; } // eof
         let line_length = line.len();
-        current_position += line_length;
-        println!("# line_length {thread_index}: {line_length}:{current_position}");
-        //let line = line.expect("couldn't get line");
-        //let line_length = line.len();
         if file_size_per_thread > line_length as u64 {
-            //pbar.update(line_length).unwrap();
+            pbar.update(line_length).unwrap();
             file_size_per_thread -= line_length as u64;
         } else {
-            //pbar.update(file_size_per_thread as usize).unwrap();
+            pbar.update(file_size_per_thread as usize).unwrap();
             file_size_per_thread = 0;
         }
         bytes_counter += line_length;
         line_counter += 1;
-        println!("current_position {}:{}:{}", thread_index, line_counter, bytes_counter+start_position as usize);
         if line_counter == 1 && thread_index != 0 {
-            println!("jsonl {thread_index} Start 1: {:?}", line);
             line.clear();
             continue;
         }
-        if line_counter == 2 {
-            println!("jsonl {thread_index} Start 2: {:?}", line);
-        }
         doc_length += 1;
         let ds: Jsonline = serde_json::from_str(&line).unwrap();
-        // println!("jsonl {thread_index}: {:?}", ds);
         let mut token_ids = tokenizer.encode(ds.text.as_str());
         token_ids.push(0);
         tokens_counter += token_ids.len();
@@ -110,15 +96,12 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
         file_bin_writer.write(token_bytes).expect("Can't write");
         doc_sizes.push(token_ids.len() as u32);
         if bytes_counter as u64 >= file_size/max_threads as u64 {
-            println!("jsonl {thread_index}: End {bytes_counter}:{:?}", file_size/max_threads as u64);
-            println!("jsonl {thread_index}: End {line}");
             break;
         }
         line.clear();
     }
     file_bin_writer.flush().unwrap();
     let metadata = Metadata {
-        name: format!("Thread: {thread_index}"),
         index: thread_index,
         doc_length: doc_length,
         doc_sizes: doc_sizes,
@@ -129,7 +112,6 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
 }
 
 fn main() {
-    // let mut handles = vec![];
     let (tx, rx) = mpsc::channel();
     let mut results: HashMap<u16, Metadata> = HashMap::new();
     println!("Json converter to RWKV binidx file format");
@@ -137,20 +119,6 @@ fn main() {
 
     let root_filename = args.input.file_stem().unwrap().to_str().unwrap();
     let filename = args.input.to_str().unwrap();
-    //let filename = args.input.file_name().unwrap().to_str().unwrap();
-    /*
-    let filename = {
-        let input = &args.input;
-        input.file_name()
-            .unwrap()
-            .to_str()
-            .unwrap()
-            .to_owned()
-    };
-    */
-    // let root_filename = filename.file;
-    // let filename = filename.as_str();
-
     let output_dir;
     output_dir = if args.output_dir.to_str().unwrap() == "-" {
         &args.input.parent().unwrap()
@@ -164,29 +132,23 @@ fn main() {
             scope.spawn(move || {
                 json2bin(thread_index, MAX_THREADS, tx_, filename);
             });
-            // handles.push(handle);
         }
     });
     for (index, metadata) in rx.iter().enumerate() {
-        //println!("{index} Got: {:?} - {:?} - {:?}", metadata.index, metadata.name, metadata.doc_length);
-        //println!("doc_sizes: {:?}", metadata.doc_sizes);
         results.insert(metadata.index, metadata);
         if index as u16 >= (MAX_THREADS - 1) {
             break;
         }
     }
-    println!("End received");
+    println!("Merging binidx data.");
     let mut document_length_all = 0;
     let mut bytes_counter_all= 0;
     let mut tokens_counter_all= 0;
-    // let mut index:u16 = 0;
     for index in 0..MAX_THREADS {
-        // handle.join().unwrap();
-        println!("result {index}: {:?}", results[&index]);
+        // println!("result {index}: {:?}", results[&index]);
         document_length_all += results[&index].doc_length;
         bytes_counter_all += results[&index].bytes_counter;
         tokens_counter_all += results[&index].tokens_counter;
-        // index += 1;
     }
 
     let file_idx = output_dir.join(format!("{root_filename}.idx"));
@@ -242,6 +204,7 @@ fn main() {
     }
     rename(file_bin, output_dir.join(format!("{root_filename}.bin"))).unwrap();
     let elapsed = start.elapsed();
+    println!("Results:");
     println!("- Output files:  {}/{{{root_filename}.bin,{root_filename}.idx}}", output_dir.to_str().unwrap());
     println!("- Bytes read: {:?}", bytes_counter_all);
     println!("- Tokens written: {:?}", tokens_counter_all);
