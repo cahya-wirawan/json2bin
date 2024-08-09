@@ -36,7 +36,7 @@ struct Args {
     output_dir: std::path::PathBuf,
 
     /// Number of threads
-    #[arg(short, long, required = false, default_value = "5")]
+    #[arg(short, long, required = false, default_value = "8")]
     thread: u16,
 }
 
@@ -74,8 +74,40 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
     let mut file_size_per_thread = file_size/max_threads as u64;
     let mut pbar = pbar(Some(file_size_per_thread as usize));
     let mut buf_reader = BufReader::new(file_in);
+    //let mut cursor = std::io::Cursor::new(file_in);
     let mut line = String::new();
-    while let Ok(n) = buf_reader.read_line(&mut line) {
+    //let mut line: Vec<u8> = Vec::new();
+    loop {
+        let n: usize;
+        if line_counter == 0 {
+            let mut line_vec: Vec<u8> = Vec::new();
+            let ret = buf_reader.read_until(0xA as u8, &mut line_vec);
+            n = match ret {
+                Ok(n) => n,
+                Err(error) => { print!("error: {:?}", error); 0},
+            };
+            if thread_index != 0 {
+                if n == 0 { break; } // eof
+                let line_length = line_vec.len();
+                if file_size_per_thread > line_length as u64 {
+                    pbar.update(line_length).unwrap();
+                    file_size_per_thread -= line_length as u64;
+                } else {
+                    pbar.update(file_size_per_thread as usize).unwrap();
+                    file_size_per_thread = 0;
+                }
+                bytes_counter += line_length;
+                line_counter += 1;
+                continue;
+            };
+            line = String::from_utf8(line_vec).unwrap()
+        } else {
+            let ret = buf_reader.read_line(&mut line);
+            n = match ret {
+                Ok(n) => n,
+                Err(error) => { print!("error: {:?}", error); 0},
+            };
+        }
         if n == 0 { break; } // eof
         let line_length = line.len();
         if file_size_per_thread > line_length as u64 {
@@ -87,10 +119,6 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
         }
         bytes_counter += line_length;
         line_counter += 1;
-        if line_counter == 1 && thread_index != 0 {
-            line.clear();
-            continue;
-        }
         doc_length += 1;
         let ds: Jsonline = serde_json::from_str(&line).unwrap();
         let mut token_ids = tokenizer.encode(ds.text.as_str());
@@ -146,7 +174,7 @@ fn main() {
             break;
         }
     }
-    println!("resultss: {:?}", results);
+    //println!("results: {:?}", results);
     println!("Merging binidx data.");
     let mut document_length_all = 0;
     let mut bytes_counter_all= 0;
