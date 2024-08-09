@@ -46,7 +46,8 @@ struct Metadata {
     doc_length: u64,
     doc_sizes: Vec<u32>,
     bytes_counter: usize,
-    tokens_counter: usize
+    tokens_counter: usize,
+    notes: String
 }
 
 
@@ -74,20 +75,19 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
     let mut file_size_per_thread = file_size/max_threads as u64;
     let mut pbar = pbar(Some(file_size_per_thread as usize));
     let mut buf_reader = BufReader::new(file_in);
-    //let mut cursor = std::io::Cursor::new(file_in);
     let mut line = String::new();
-    //let mut line: Vec<u8> = Vec::new();
+    let start = Instant::now();
     loop {
-        let n: usize;
+        let byte_read: usize;
         if line_counter == 0 {
             let mut line_vec: Vec<u8> = Vec::new();
             let ret = buf_reader.read_until(0xA as u8, &mut line_vec);
-            n = match ret {
-                Ok(n) => n,
-                Err(error) => { print!("error: {:?}", error); 0},
-            };
+            byte_read = ret.unwrap_or_else(|error| {
+                print!("File read error: {:?}", error);
+                0
+            });
             if thread_index != 0 {
-                if n == 0 { break; } // eof
+                if byte_read == 0 { break; } // eof
                 let line_length = line_vec.len();
                 if file_size_per_thread > line_length as u64 {
                     pbar.update(line_length).unwrap();
@@ -103,12 +103,12 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
             line = String::from_utf8(line_vec).unwrap()
         } else {
             let ret = buf_reader.read_line(&mut line);
-            n = match ret {
-                Ok(n) => n,
-                Err(error) => { print!("error: {:?}", error); 0},
-            };
+            byte_read = ret.unwrap_or_else(|error| {
+                print!("File read error: {:?}", error);
+                0
+            });
         }
-        if n == 0 { break; } // eof
+        if byte_read == 0 { break; } // eof
         let line_length = line.len();
         if file_size_per_thread > line_length as u64 {
             pbar.update(line_length).unwrap();
@@ -132,13 +132,16 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
         }
         line.clear();
     }
+    let elapsed = start.elapsed();
+    let performance = bytes_counter as f32/elapsed.as_secs_f32()/(1024*1024) as f32;
     file_bin_writer.flush().unwrap();
     let metadata = Metadata {
         index: thread_index,
         doc_length: doc_length,
         doc_sizes: doc_sizes,
         bytes_counter: bytes_counter,
-        tokens_counter: tokens_counter
+        tokens_counter: tokens_counter,
+        notes: format!("Performance: {thread_index}: {performance:.2?}MB/s")
     };
     tx.send(metadata).unwrap();
 }
@@ -169,6 +172,7 @@ fn main() {
         }
     });
     for (index, metadata) in rx.iter().enumerate() {
+        println!("Notes {index}: {}", metadata.notes);
         results.insert(metadata.index, metadata);
         if index as u16 >= (threads_number - 1) {
             break;
