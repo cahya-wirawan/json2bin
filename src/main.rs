@@ -38,6 +38,10 @@ struct Args {
     /// Number of threads
     #[arg(short, long, required = false, default_value = "8")]
     thread: u16,
+
+    /// Verbosity
+    #[arg(short, long, action)]
+    verbose: bool,
 }
 
 #[derive(Debug)]
@@ -47,7 +51,7 @@ struct Metadata {
     doc_sizes: Vec<u32>,
     bytes_counter: usize,
     tokens_counter: usize,
-    notes: String
+    performance: f32
 }
 
 
@@ -141,7 +145,7 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
         doc_sizes: doc_sizes,
         bytes_counter: bytes_counter,
         tokens_counter: tokens_counter,
-        notes: format!("Performance: {thread_index}: {performance:.2?}MB/s")
+        performance: performance
     };
     tx.send(metadata).unwrap();
 }
@@ -161,6 +165,7 @@ fn main() {
         &*args.output_dir
     };
     let threads_number = args.thread;
+    let verbose = args.verbose;
 
     let start = Instant::now();
     thread::scope(|scope| {
@@ -172,7 +177,7 @@ fn main() {
         }
     });
     for (index, metadata) in rx.iter().enumerate() {
-        println!("Notes {index}: {}", metadata.notes);
+        if verbose { println!("{}", format!("Thread {}: {:.2}MB/s", metadata.index, metadata.performance)); }
         results.insert(metadata.index, metadata);
         if index as u16 >= (threads_number - 1) {
             break;
