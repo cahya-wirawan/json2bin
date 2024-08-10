@@ -44,9 +44,7 @@ $ json2bin -i src/sample.jsonl -t 4
 
 ## Performance comparison
 
-We converted a 213MB simple english wikipedia in jsonl format to binidx format in M2 Apple machine. The Rust json2bin
-is more than 24 times faster than the Python json2binidx:
-The Python json2binidx: 46.87s
-This Rust json2bin: 1.92s
-
-
+We converted a 19GB English Wikipedia (20231101.en) in jsonl format to binidx format in M2 Apple machine. 
+The Rust json2bin run with 7 threads, and it was 70 times faster than the Python json2binidx:
+- The Python [json2binidx](https://github.com/Abel2076/json2binidx_tool): 1:01:45 or 5.13MB/s
+- This Rust json2bin: 52.64s or 360.86MB/s
