@@ -6,7 +6,7 @@
 
 A fast multithreading Jsonl converter to RWKV binidx files written in Rust.
 
-![performance-multithreading](data/performance-multithreading.png)
+![performance-multithreading](https://raw.githubusercontent.com/cahya-wirawan/json2bin/main/data/performance-multithreading.png)
 
 ## Installation
 
