@@ -177,19 +177,19 @@ fn main() {
         }
     });
     for (index, metadata) in rx.iter().enumerate() {
-        if verbose { println!("{}", format!("Thread {}: {:.2}MB/s", metadata.index, metadata.performance)); }
+        if verbose {
+            println!("{}", format!("Thread {}: {:.2}MB/s", metadata.index, metadata.performance));
+        }
         results.insert(metadata.index, metadata);
         if index as u16 >= (threads_number - 1) {
             break;
         }
     }
-    //println!("results: {:?}", results);
     println!("Merging binidx data.");
     let mut document_length_all = 0;
     let mut bytes_counter_all= 0;
     let mut tokens_counter_all= 0;
     for index in 0..threads_number {
-        // println!("result {index}: {:?}", results[&index]);
         document_length_all += results[&index].doc_length;
         bytes_counter_all += results[&index].bytes_counter;
         tokens_counter_all += results[&index].tokens_counter;
