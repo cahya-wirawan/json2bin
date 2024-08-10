@@ -6,7 +6,7 @@ use std::io::{BufRead, BufReader, BufWriter, Seek, Write, SeekFrom};
 use std::sync::mpsc::Sender;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use clap::Parser;
 use tqdm::pbar;
 use serde::Deserialize;
@@ -76,7 +76,7 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
     let mut pbar = pbar(Some(file_size_per_thread as usize));
     let mut buf_reader = BufReader::new(file_in);
     let mut line = String::new();
-    let start = Instant::now();
+    let mut elapsed_time = Duration::new(0, 0);
     loop {
         let byte_read: usize;
         if line_counter == 0 {
@@ -108,6 +108,7 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
                 0
             });
         }
+        let start = Instant::now();
         if byte_read == 0 { break; } // eof
         let line_length = line.len();
         if file_size_per_thread > line_length as u64 {
@@ -131,9 +132,10 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
             break;
         }
         line.clear();
+        let elapsed = start.elapsed();
+        elapsed_time += elapsed;
     }
-    let elapsed = start.elapsed();
-    let performance = bytes_counter as f32/elapsed.as_secs_f32()/(1024*1024) as f32;
+    let performance = bytes_counter as f32/elapsed_time.as_secs_f32()/(1024*1024) as f32;
     file_bin_writer.flush().unwrap();
     let metadata = Metadata {
         index: thread_index,
