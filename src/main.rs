@@ -12,6 +12,7 @@ use tqdm::pbar;
 use serde::Deserialize;
 use bytemuck::cast_slice;
 use std::io::prelude::*;
+use primes::is_prime;
 use rwkv_tokenizer;
 
 // const DEFAULT_THREADS_NUMBER: u16 = 8;
@@ -29,11 +30,11 @@ struct Jsonline {
 struct Args {
     /// Jsonlines file to read
     #[arg(short, long)]
-    input: std::path::PathBuf,
+    input: PathBuf,
 
     /// Output directory for binidx files
     #[arg(short, long, required = false, default_value = "-")]
-    output_dir: std::path::PathBuf,
+    output_dir: PathBuf,
 
     /// Number of threads
     #[arg(short, long, required = false, default_value = "8")]
@@ -42,6 +43,10 @@ struct Args {
     /// Verbosity
     #[arg(short, long, action)]
     verbose: bool,
+    
+    /// Context Length
+    #[arg(short, long, required = false, default_value = "4096")]
+    context_length: usize,
 }
 
 #[derive(Debug)]
@@ -85,7 +90,7 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
         let byte_read: usize;
         if line_counter == 0 {
             let mut line_vec: Vec<u8> = Vec::new();
-            let ret = buf_reader.read_until(0xA as u8, &mut line_vec);
+            let ret = buf_reader.read_until(0xAu8, &mut line_vec);
             byte_read = ret.unwrap_or_else(|error| {
                 print!("File read error: {:?}", error);
                 0
@@ -141,11 +146,11 @@ fn json2bin(thread_index: u16, max_threads: u16, tx: Sender<Metadata>, filename:
     file_bin_writer.flush().unwrap();
     let metadata = Metadata {
         index: thread_index,
-        doc_length: doc_length,
-        doc_sizes: doc_sizes,
-        bytes_counter: bytes_counter,
-        tokens_counter: tokens_counter,
-        performance: performance
+        doc_length,
+        doc_sizes,
+        bytes_counter,
+        tokens_counter,
+        performance
     };
     tx.send(metadata).unwrap();
 }
@@ -166,6 +171,7 @@ fn main() {
     };
     let threads_number = args.thread;
     let verbose = args.verbose;
+    let context_length = args.context_length;
 
     let start = Instant::now();
     thread::scope(|scope| {
@@ -223,7 +229,7 @@ fn main() {
         }
     }
     for i in 0..document_length_all+1 {
-        buf_idx_writer.write(cast_slice(&[i as u64])).expect("Can't write");
+        buf_idx_writer.write(cast_slice(&[i])).expect("Can't write");
     }
     buf_idx_writer.flush().unwrap();
 
@@ -248,6 +254,18 @@ fn main() {
     }
     rename(file_bin, output_dir.join(format!("{root_filename}.bin"))).unwrap();
     let elapsed = start.elapsed();
+    let mut magic_prime: usize = 0;
+    if tokens_counter_all > context_length * 3 {
+        let n_chunk = (tokens_counter_all / context_length) - 1;
+        for i in (0..n_chunk).rev() {
+            if i % 3 == 2 {
+                if is_prime(i as u64) {
+                    magic_prime = i;
+                    break;
+                }
+            }
+        }
+    }
     println!("Results:");
     println!("- Output files:  {}/{{{root_filename}.bin,{root_filename}.idx}}", output_dir.to_str().unwrap());
     println!("- Bytes read: {:?} ({:.2?}MB)", bytes_counter_all, bytes_counter_all as f32/(1024*1024) as f32);
@@ -255,4 +273,6 @@ fn main() {
     println!("- Bytes/tokens: {:.2?}", bytes_counter_all as c_float/tokens_counter_all as c_float);
     println!("- Elapsed time: {:.2?}", elapsed);
     println!("- Performance: {:.2?}MB/s", bytes_counter_all as f32/elapsed.as_secs_f32()/(1024*1024) as f32);
+    println!("- Context length: {:?}", context_length);
+    println!("- Magic prime: {:?}", magic_prime);
 }

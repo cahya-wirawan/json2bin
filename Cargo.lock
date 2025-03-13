@@ -191,6 +191,7 @@ version = "0.2.0"
 dependencies = [
  "bytemuck",
  "clap",
+ "primes",
  "rwkv-tokenizer",
  "serde",
  "serde_json",
@@ -265,6 +266,12 @@ dependencies = [
  "smallvec",
  "windows-targets 0.52.6",
 ]
+
+[[package]]
+name = "primes"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0466ef49edd4a5a4bc9d62804a34e89366810bd8bfc3ed537101e3d099f245c5"
 
 [[package]]
 name = "proc-macro2"
