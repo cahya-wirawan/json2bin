@@ -273,6 +273,5 @@ fn main() {
     println!("- Bytes/tokens: {:.2?}", bytes_counter_all as c_float/tokens_counter_all as c_float);
     println!("- Elapsed time: {:.2?}", elapsed);
     println!("- Performance: {:.2?}MB/s", bytes_counter_all as f32/elapsed.as_secs_f32()/(1024*1024) as f32);
-    println!("- Context length: {:?}", context_length);
-    println!("- Magic prime: {:?}", magic_prime);
+    println!("- Magic prime: {:?} for context length {:?}", magic_prime, context_length);
 }
