@@ -26,6 +26,7 @@ Options:
   -o, --output-dir <OUTPUT_DIR>  Output directory for binidx files [default: -]
   -t, --thread <THREAD>          Number of threads [default: 8]
   -v, --verbose                  Verbosity
+  -c, --context-length <CONTEXT_LENGTH>  Context Length [default: 4096]
   -h, --help                     Print help
   -V, --version                  Print version
 ```
